@@ -1,0 +1,24 @@
+﻿@model IEnumerable<FutureValuesModel>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<table class="table">
+    <tr>
+        <th>Present Value</th>
+        <th>Lower Bound Interest</th>
+        <th>Upper Bound Interest</th>
+        <th>Incremental Rate</th>
+        <th>Maturity Years</th>
+    </tr>
+    @foreach (var item in Model)
+    {
+    <tr>
+        <td>@item.PresentValue</td>
+        <td>@item.LowerBoundInterest</td>
+        <td>@item.UpperBoundInterest</td>
+        <td>@item.IncrementalRate</td>
+        <td>@item.MaturityYears</td>
+    </tr>
+    }
+</table>
