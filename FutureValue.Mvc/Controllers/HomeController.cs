@@ -1,11 +1,14 @@
 ﻿using FutureValue.Mvc.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace FutureValue.Mvc.Controllers
@@ -22,25 +25,87 @@ namespace FutureValue.Mvc.Controllers
 
         public IActionResult Index()
         {
-            IEnumerable<FutureValuesModel> futureValuesModels;
-            using (HttpResponseMessage response = GlobalVariables.WebApiClient.GetAsync("api/FutureValues").Result)
+            try
             {
-                if(response.IsSuccessStatusCode)
+                IEnumerable<FutureValuesModel> futureValuesModels;
+                using (HttpResponseMessage response = GlobalVariables.WebApiClient.GetAsync("api/FutureValues").Result)
                 {
-                    futureValuesModels = response.Content.ReadAsAsync<IEnumerable<FutureValuesModel>>().Result;
-                    return View(futureValuesModels);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        futureValuesModels = response.Content.ReadAsAsync<IEnumerable<FutureValuesModel>>().Result;
+                        foreach(var futureValues in futureValuesModels)
+                        {
+                            futureValues.ExecutionDetails = GetExecutionDetails(futureValues.FutureValuesId);
+                        }
+                        return View(futureValuesModels);
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
                 }
-                else
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+                 
+        }
+
+        [HttpGet]
+        public IActionResult ComputeFutureValue()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ComputeFutureValue(FutureValuesModel futureValuesModel)
+        {
+            try
+            {
+                using (HttpResponseMessage response = GlobalVariables.WebApiClient.PostAsJsonAsync("api/FutureValues", futureValuesModel).Result)
                 {
-                    return BadRequest();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string jsonString = response.Content.ReadAsStringAsync().Result;
+                        var res = JsonConvert.DeserializeObject<FutureValuesModel>(jsonString);
+                        ViewData["ExecutionDetailsList"] = GetExecutionDetails(res.FutureValuesId);
+
+                        return View();
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                throw;
             }
         }
 
-        public IActionResult Privacy()
+        [HttpGet]
+        public List<ExecutionDetailsModel> GetExecutionDetails(int id)
         {
-
-            return View();
+            try
+            {
+                using (HttpResponseMessage response = GlobalVariables.WebApiClient.GetAsync("api/ExecutionDetails/" + id).Result)
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return response.Content.ReadAsAsync<List<ExecutionDetailsModel>>().Result;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                throw;
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

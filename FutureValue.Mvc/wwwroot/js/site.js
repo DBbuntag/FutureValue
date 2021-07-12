@@ -2,3 +2,11 @@
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
+$(document).ready(function () {
+
+    //for clearing of form
+    $("#btnClear").click(function () {
+        $("#computeForm").trigger("reset");
+        //$("span.field-validation-error").removeClass();
+    });
+});
